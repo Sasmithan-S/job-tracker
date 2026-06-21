@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Briefcase, Mail, Lock, ArrowRight, CheckCircle2 } from "lucide-react";
 
-type Mode = "connexion" | "inscription";
+type Mode = "connexion" | "inscription" | "oubli";
 
 export default function LoginPage() {
   const supabase = createClient();
@@ -20,6 +20,16 @@ export default function LoginPage() {
     setError(null);
     setMessage(null);
     setLoading(true);
+
+    if (mode === "oubli") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) setError(error.message);
+      else setMessage("Si ce compte existe, un email avec un lien de réinitialisation vient d'être envoyé.");
+      setLoading(false);
+      return;
+    }
 
     if (mode === "inscription") {
       const { error } = await supabase.auth.signUp({
@@ -86,10 +96,10 @@ export default function LoginPage() {
 
           <div className="bg-white rounded-card shadow-card p-8">
             <h2 className="font-display font-bold text-2xl text-ink mb-1">
-              {mode === "connexion" ? "Content de te revoir" : "Crée ton compte"}
+              {mode === "connexion" ? "Content de te revoir" : mode === "inscription" ? "Crée ton compte" : "Mot de passe oublié"}
             </h2>
             <p className="text-ink-muted text-sm mb-6">
-              {mode === "connexion" ? "Connecte-toi pour suivre tes candidatures." : "Quelques secondes, c'est gratuit."}
+              {mode === "connexion" ? "Connecte-toi pour suivre tes candidatures." : mode === "inscription" ? "Quelques secondes, c'est gratuit." : "On t'envoie un lien pour le réinitialiser."}
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -107,21 +117,34 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="text-sm font-medium text-ink mb-1.5 block">Mot de passe</label>
-                <div className="relative">
-                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition"
-                  />
+              {mode !== "oubli" && (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-sm font-medium text-ink">Mot de passe</label>
+                    {mode === "connexion" && (
+                      <button
+                        type="button"
+                        onClick={() => { setMode("oubli"); setError(null); setMessage(null); }}
+                        className="text-xs text-coral hover:underline"
+                      >
+                        Oublié ?
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {error && <p className="text-sm text-status-refuse bg-status-refuse/5 border border-status-refuse/20 rounded-lg px-3 py-2">{error}</p>}
               {message && <p className="text-sm text-status-accepte bg-status-accepte/5 border border-status-accepte/20 rounded-lg px-3 py-2">{message}</p>}
@@ -131,23 +154,34 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full bg-navy hover:bg-navy-light text-white font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50"
               >
-                {loading ? "..." : mode === "connexion" ? "Se connecter" : "Créer mon compte"}
+                {loading ? "..." : mode === "connexion" ? "Se connecter" : mode === "inscription" ? "Créer mon compte" : "Envoyer le lien"}
                 {!loading && <ArrowRight size={16} />}
               </button>
             </form>
 
             <p className="text-center text-sm text-ink-muted mt-6">
-              {mode === "connexion" ? "Pas encore de compte ?" : "Déjà un compte ?"}{" "}
-              <button
-                onClick={() => {
-                  setMode(mode === "connexion" ? "inscription" : "connexion");
-                  setError(null);
-                  setMessage(null);
-                }}
-                className="text-coral font-medium hover:underline"
-              >
-                {mode === "connexion" ? "Inscris-toi" : "Connecte-toi"}
-              </button>
+              {mode === "oubli" ? (
+                <button
+                  onClick={() => { setMode("connexion"); setError(null); setMessage(null); }}
+                  className="text-coral font-medium hover:underline"
+                >
+                  Retour à la connexion
+                </button>
+              ) : (
+                <>
+                  {mode === "connexion" ? "Pas encore de compte ?" : "Déjà un compte ?"}{" "}
+                  <button
+                    onClick={() => {
+                      setMode(mode === "connexion" ? "inscription" : "connexion");
+                      setError(null);
+                      setMessage(null);
+                    }}
+                    className="text-coral font-medium hover:underline"
+                  >
+                    {mode === "connexion" ? "Inscris-toi" : "Connecte-toi"}
+                  </button>
+                </>
+              )}
             </p>
           </div>
         </div>

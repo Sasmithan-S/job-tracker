@@ -1,0 +1,129 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Briefcase, Lock, ArrowRight } from "lucide-react";
+
+export default function ResetPasswordPage() {
+  const supabase = createClient();
+  const [ready, setReady] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    async function init() {
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          setError("Lien de réinitialisation invalide ou expiré. Refais une demande depuis la page de connexion.");
+          return;
+        }
+      }
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        setError("Lien de réinitialisation invalide ou expiré. Refais une demande depuis la page de connexion.");
+        return;
+      }
+      setReady(true);
+    }
+    init();
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (password.length < 6) {
+      setError("6 caractères minimum.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Les deux mots de passe ne correspondent pas.");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    setDone(true);
+    setTimeout(() => { window.location.href = "/dashboard"; }, 1500);
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 bg-canvas">
+      <div className="w-full max-w-sm">
+        <div className="flex items-center gap-2 mb-8 justify-center">
+          <div className="w-9 h-9 rounded-lg bg-coral flex items-center justify-center">
+            <Briefcase size={18} className="text-white" />
+          </div>
+          <span className="font-display font-bold text-lg text-navy">Candidatures</span>
+        </div>
+
+        <div className="bg-white rounded-card shadow-card p-8">
+          <h2 className="font-display font-bold text-2xl text-ink mb-1">Nouveau mot de passe</h2>
+          <p className="text-ink-muted text-sm mb-6">Choisis un nouveau mot de passe pour ton compte.</p>
+
+          {done ? (
+            <p className="text-sm text-status-accepte bg-status-accepte/5 border border-status-accepte/20 rounded-lg px-3 py-2">
+              Mot de passe mis à jour. Redirection...
+            </p>
+          ) : !ready ? (
+            <p className="text-sm text-ink-muted">{error ?? "Vérification du lien..."}</p>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-ink mb-1.5 block">Nouveau mot de passe</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-ink mb-1.5 block">Confirmer</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition"
+                  />
+                </div>
+              </div>
+
+              {error && <p className="text-sm text-status-refuse bg-status-refuse/5 border border-status-refuse/20 rounded-lg px-3 py-2">{error}</p>}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-navy hover:bg-navy-light text-white font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50"
+              >
+                {loading ? "..." : "Mettre à jour"}
+                {!loading && <ArrowRight size={16} />}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
