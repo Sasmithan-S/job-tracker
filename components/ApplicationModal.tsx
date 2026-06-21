@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Application, Statut, TypeEmploi } from "@/lib/types";
 import { STATUTS, TYPES_EMPLOI } from "@/lib/types";
-import { X, Link2 } from "lucide-react";
+import { X, Link2, Wand2, Loader2 } from "lucide-react";
 
 interface Props {
   application: Application | null;
@@ -26,8 +26,11 @@ export default function ApplicationModal({ application, onClose, onSave }: Props
   const [form, setForm] = useState(VIDE);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoFilling, setAutoFilling] = useState(false);
+  const [autoFillMsg, setAutoFillMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    setAutoFillMsg(null);
     if (application) {
       setForm({
         lien: application.lien,
@@ -59,6 +62,34 @@ export default function ApplicationModal({ application, onClose, onSave }: Props
 
   function capitalize(s: string) {
     return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  async function handleAutoFill() {
+    if (!form.lien.trim()) return;
+    setAutoFilling(true);
+    setAutoFillMsg(null);
+    try {
+      const res = await fetch("/api/applications/parse-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lien: form.lien.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Échec de l'extraction");
+
+      setForm((f) => ({
+        ...f,
+        poste: data.poste ?? f.poste,
+        entreprise: data.entreprise ?? f.entreprise,
+        type_emploi: data.type_emploi ?? f.type_emploi,
+        numero_reference: data.numero_reference ?? f.numero_reference,
+      }));
+      setAutoFillMsg("Champs pré-remplis, vérifie avant d'enregistrer.");
+    } catch (e: any) {
+      setAutoFillMsg(e.message || "Impossible d'extraire les infos de ce lien, complète manuellement.");
+    } finally {
+      setAutoFilling(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -113,6 +144,18 @@ export default function ApplicationModal({ application, onClose, onSave }: Props
                 className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition"
               />
             </div>
+            <div className="flex items-center justify-between mt-1.5">
+              <button
+                type="button"
+                onClick={handleAutoFill}
+                disabled={autoFilling || !form.lien.trim()}
+                className="text-xs text-coral hover:underline disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                {autoFilling ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}
+                {autoFilling ? "Analyse de l'offre..." : "Remplir automatiquement"}
+              </button>
+            </div>
+            {autoFillMsg && <p className="text-xs text-ink-muted mt-1">{autoFillMsg}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
