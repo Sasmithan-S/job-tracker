@@ -77,16 +77,25 @@ export default function ApplicationModal({ application, onClose, onSave }: Props
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Échec de l'extraction");
 
-      setForm((f) => ({
-        ...f,
-        poste: data.poste ?? f.poste,
-        entreprise: data.entreprise ?? f.entreprise,
-        type_emploi: data.type_emploi ?? f.type_emploi,
-        numero_reference: data.numero_reference ?? f.numero_reference,
-      }));
-      setAutoFillMsg("Champs pré-remplis, vérifie avant d'enregistrer.");
+      // On ne remplace QUE les champs vides, pour ne pas écraser une saisie manuelle.
+      // Et on ne remplit qu'avec des valeurs réellement extraites (jamais de faux).
+      const remplis: string[] = [];
+      setForm((f) => {
+        const next = { ...f };
+        if (data.poste && !f.poste) { next.poste = data.poste; remplis.push("poste"); }
+        if (data.entreprise && !f.entreprise) { next.entreprise = data.entreprise; remplis.push("entreprise"); }
+        if (data.type_emploi) { next.type_emploi = data.type_emploi; remplis.push("type"); }
+        if (data.numero_reference && !f.numero_reference) { next.numero_reference = data.numero_reference; remplis.push("référence"); }
+        return next;
+      });
+
+      if (remplis.length === 0) {
+        setAutoFillMsg("Rien de fiable à extraire ici. Complète les champs à la main.");
+      } else {
+        setAutoFillMsg(`Pré-rempli : ${remplis.join(", ")}. Vérifie avant d'enregistrer.`);
+      }
     } catch (e: any) {
-      setAutoFillMsg(e.message || "Impossible d'extraire les infos de ce lien, complète manuellement.");
+      setAutoFillMsg(e.message || "Ce site bloque l'extraction. Complète les champs à la main.");
     } finally {
       setAutoFilling(false);
     }
