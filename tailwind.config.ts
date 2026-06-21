@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -9,40 +10,67 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        navy: {
-          DEFAULT: "#14213D",
-          dark: "#0D1730",
-          light: "#1E2D52",
+        bg: {
+          DEFAULT: "var(--bg)",
+          elevated: "var(--bg-elevated)",
+          inset: "var(--bg-inset)",
         },
-        coral: {
-          DEFAULT: "#FF6B4A",
-          dark: "#E5512F",
-          light: "#FFE4DC",
+        border: {
+          DEFAULT: "var(--border)",
+          strong: "var(--border-strong)",
         },
-        canvas: "#F7F8FA",
-        ink: {
-          DEFAULT: "#1A1D29",
-          muted: "#6B7280",
-          faint: "#9CA3AF",
+        content: {
+          DEFAULT: "var(--text)",
+          muted: "var(--text-muted)",
+          faint: "var(--text-faint)",
+        },
+        accent: {
+          DEFAULT: "var(--accent)",
+          dark: "var(--accent-dark)",
+          soft: "var(--accent-soft)",
         },
         status: {
-          attente: "#94A3B8",
-          entretien: "#2563EB",
+          attente: "#8B97A8",
+          entretien: "#3B82F6",
           relance: "#F59E0B",
-          refuse: "#EF4444",
-          accepte: "#16A34A",
+          refuse: "#F0506E",
+          accepte: "#10C98D",
         },
       },
       fontFamily: {
-        display: ["var(--font-display)", "sans-serif"],
-        body: ["var(--font-body)", "sans-serif"],
+        display: ["var(--font-display)", "system-ui", "sans-serif"],
+        body: ["var(--font-body)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       boxShadow: {
-        card: "0 1px 2px rgba(20, 33, 61, 0.06), 0 1px 8px rgba(20, 33, 61, 0.06)",
-        "card-hover": "0 4px 16px rgba(20, 33, 61, 0.10)",
+        card: "var(--shadow-card)",
+        "card-hover": "var(--shadow-card-hover)",
+        glow: "0 0 0 1px var(--accent-soft), 0 0 20px -4px var(--accent-glow)",
       },
       borderRadius: {
-        card: "16px",
+        card: "14px",
+      },
+      keyframes: {
+        "fade-in-up": {
+          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "fade-in": { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
+        "scale-in": {
+          "0%": { opacity: "0", transform: "scale(0.96)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "count-pop": {
+          "0%": { transform: "scale(1)" },
+          "40%": { transform: "scale(1.18)" },
+          "100%": { transform: "scale(1)" },
+        },
+      },
+      animation: {
+        "fade-in-up": "fade-in-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "fade-in": "fade-in 0.3s ease both",
+        "scale-in": "scale-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "count-pop": "count-pop 0.4s ease",
       },
     },
   },

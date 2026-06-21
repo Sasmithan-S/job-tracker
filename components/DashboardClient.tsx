@@ -101,19 +101,19 @@ export default function DashboardClient({ initialApplications, initialEmailConne
 
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-bg">
       <Navbar userEmail={userEmail} onNewApplication={() => { setEditing(null); setModalOpen(true); }} />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5">
         {gmailError && (
-          <div className="bg-status-refuse/5 border border-status-refuse/20 text-status-refuse text-sm rounded-lg px-4 py-2.5">
+          <div className="bg-status-refuse/10 border border-status-refuse/20 text-status-refuse text-sm rounded-lg px-4 py-2.5 animate-fade-in">
             Connexion Gmail impossible ({gmailError}). Réessaie depuis le panneau ci-dessous.
           </div>
         )}
 
-        <div>
-          <h1 className="font-display font-bold text-2xl text-ink">Mes candidatures</h1>
-          <p className="text-sm text-ink-muted mt-0.5">Colle un lien, suis ton statut, laisse l'email faire le reste.</p>
+        <div className="animate-fade-in-up">
+          <h1 className="font-display font-bold text-2xl text-content tracking-tight">Mes candidatures</h1>
+          <p className="text-sm text-content-muted mt-0.5">Colle un lien, suis ton statut, laisse l'email faire le reste.</p>
         </div>
 
         <EmailSyncPanel connection={emailConnection} onSynced={() => window.location.reload()} />
@@ -130,7 +130,7 @@ export default function DashboardClient({ initialApplications, initialEmailConne
         {filtered.length === 0 ? (
           <EmptyState onNew={() => { setEditing(null); setModalOpen(true); }} filtre={applications.length > 0} />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div key={`${search}-${typeFiltre}-${statutFiltre}-${tri}`} className="stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((app) => (
               <ApplicationCard
                 key={app.id}

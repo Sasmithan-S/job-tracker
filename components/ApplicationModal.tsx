@@ -22,6 +22,9 @@ const VIDE = {
   notes: "",
 };
 
+const inputClass =
+  "w-full px-3 py-2.5 rounded-lg bg-bg-inset border border-border text-content placeholder:text-content-faint text-sm focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-colors";
+
 export default function ApplicationModal({ application, onClose, onSave }: Props) {
   const [form, setForm] = useState(VIDE);
   const [saving, setSaving] = useState(false);
@@ -47,8 +50,11 @@ export default function ApplicationModal({ application, onClose, onSave }: Props
     }
   }, [application]);
 
+  function capitalize(s: string) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
   async function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
-    // Pré-remplit le nom d'entreprise depuis le domaine du lien collé, si vide
     const pasted = e.clipboardData.getData("text");
     if (!form.entreprise && pasted.startsWith("http")) {
       try {
@@ -58,10 +64,6 @@ export default function ApplicationModal({ application, onClose, onSave }: Props
         /* ignore */
       }
     }
-  }
-
-  function capitalize(s: string) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
   async function handleAutoFill() {
@@ -77,8 +79,6 @@ export default function ApplicationModal({ application, onClose, onSave }: Props
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Échec de l'extraction");
 
-      // On ne remplace QUE les champs vides, pour ne pas écraser une saisie manuelle.
-      // Et on ne remplit qu'avec des valeurs réellement extraites (jamais de faux).
       const remplis: string[] = [];
       setForm((f) => {
         const next = { ...f };
@@ -123,25 +123,22 @@ export default function ApplicationModal({ application, onClose, onSave }: Props
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm" onClick={onClose}>
-      <div
-        className="bg-white rounded-card shadow-card-hover w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-card">
-          <h2 className="font-display font-semibold text-lg text-ink">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+      <div className="bg-bg-elevated rounded-card border border-border shadow-card-hover w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-bg-elevated rounded-t-card z-10">
+          <h2 className="font-display font-semibold text-lg text-content">
             {application ? "Modifier la candidature" : "Nouvelle candidature"}
           </h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-gray-50 flex items-center justify-center text-ink-muted">
+          <button onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-bg-inset flex items-center justify-center text-content-muted transition-colors">
             <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="text-sm font-medium text-ink mb-1.5 block">Lien de l'annonce *</label>
+            <label className="text-sm font-medium text-content mb-1.5 block">Lien de l'annonce *</label>
             <div className="relative">
-              <Link2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+              <Link2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-content-faint pointer-events-none" />
               <input
                 autoFocus
                 required
@@ -150,7 +147,7 @@ export default function ApplicationModal({ application, onClose, onSave }: Props
                 onPaste={handlePaste}
                 onChange={(e) => setForm({ ...form, lien: e.target.value })}
                 placeholder="Colle le lien de l'offre ici"
-                className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition"
+                className={`${inputClass} pl-9`}
               />
             </div>
             <div className="flex items-center justify-between mt-1.5">
@@ -158,56 +155,40 @@ export default function ApplicationModal({ application, onClose, onSave }: Props
                 type="button"
                 onClick={handleAutoFill}
                 disabled={autoFilling || !form.lien.trim()}
-                className="text-xs text-coral hover:underline disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="text-xs text-accent hover:underline disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed flex items-center gap-1.5 font-medium"
               >
                 {autoFilling ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}
                 {autoFilling ? "Analyse de l'offre..." : "Remplir automatiquement"}
               </button>
             </div>
-            {autoFillMsg && <p className="text-xs text-ink-muted mt-1">{autoFillMsg}</p>}
+            {autoFillMsg && <p className="text-xs text-content-muted mt-1">{autoFillMsg}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-ink mb-1.5 block">Poste *</label>
-              <input
-                required
-                value={form.poste}
-                onChange={(e) => setForm({ ...form, poste: e.target.value })}
-                placeholder="Développeur Front Office"
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition"
-              />
+              <label className="text-sm font-medium text-content mb-1.5 block">Poste *</label>
+              <input required value={form.poste} onChange={(e) => setForm({ ...form, poste: e.target.value })}
+                placeholder="Développeur Front Office" className={inputClass} />
             </div>
             <div>
-              <label className="text-sm font-medium text-ink mb-1.5 block">Entreprise *</label>
-              <input
-                required
-                value={form.entreprise}
-                onChange={(e) => setForm({ ...form, entreprise: e.target.value })}
-                placeholder="Société Générale"
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition"
-              />
+              <label className="text-sm font-medium text-content mb-1.5 block">Entreprise *</label>
+              <input required value={form.entreprise} onChange={(e) => setForm({ ...form, entreprise: e.target.value })}
+                placeholder="Société Générale" className={inputClass} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-ink mb-1.5 block">Type d'emploi</label>
-              <select
-                value={form.type_emploi}
-                onChange={(e) => setForm({ ...form, type_emploi: e.target.value as TypeEmploi })}
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition"
-              >
+              <label className="text-sm font-medium text-content mb-1.5 block">Type d'emploi</label>
+              <select value={form.type_emploi} onChange={(e) => setForm({ ...form, type_emploi: e.target.value as TypeEmploi })}
+                className={`${inputClass} cursor-pointer`}>
                 {TYPES_EMPLOI.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-ink mb-1.5 block">Statut</label>
-              <select
-                value={form.statut}
-                onChange={(e) => setForm({ ...form, statut: e.target.value as Statut })}
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition"
-              >
+              <label className="text-sm font-medium text-content mb-1.5 block">Statut</label>
+              <select value={form.statut} onChange={(e) => setForm({ ...form, statut: e.target.value as Statut })}
+                className={`${inputClass} cursor-pointer`}>
                 {STATUTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
@@ -215,58 +196,38 @@ export default function ApplicationModal({ application, onClose, onSave }: Props
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-ink mb-1.5 block">
-                N° de référence
-                <span className="text-ink-faint font-normal"> (optionnel)</span>
+              <label className="text-sm font-medium text-content mb-1.5 block">
+                N° de référence <span className="text-content-faint font-normal">(optionnel)</span>
               </label>
-              <input
-                value={form.numero_reference}
-                onChange={(e) => setForm({ ...form, numero_reference: e.target.value })}
-                placeholder="REF-2026-0451"
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition"
-              />
+              <input value={form.numero_reference} onChange={(e) => setForm({ ...form, numero_reference: e.target.value })}
+                placeholder="REF-2026-0451" className={`${inputClass} font-mono`} />
             </div>
             <div>
-              <label className="text-sm font-medium text-ink mb-1.5 block">Date de candidature</label>
-              <input
-                type="date"
-                value={form.date_candidature}
-                onChange={(e) => setForm({ ...form, date_candidature: e.target.value })}
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition"
-              />
+              <label className="text-sm font-medium text-content mb-1.5 block">Date de candidature</label>
+              <input type="date" value={form.date_candidature} onChange={(e) => setForm({ ...form, date_candidature: e.target.value })}
+                className={`${inputClass} font-mono`} />
             </div>
           </div>
 
           <div>
-            <label className="text-sm font-medium text-ink mb-1.5 block">Notes</label>
-            <textarea
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              rows={2}
-              placeholder="Contact RH, retour d'entretien..."
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none transition resize-none"
-            />
+            <label className="text-sm font-medium text-content mb-1.5 block">Notes</label>
+            <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2}
+              placeholder="Contact RH, retour d'entretien..." className={`${inputClass} resize-none`} />
           </div>
 
-          {error && <p className="text-sm text-status-refuse bg-status-refuse/5 border border-status-refuse/20 rounded-lg px-3 py-2">{error}</p>}
+          {error && <p className="text-sm text-status-refuse bg-status-refuse/10 border border-status-refuse/20 rounded-lg px-3 py-2">{error}</p>}
 
-          <p className="text-xs text-ink-faint">
-            Astuce : si tu as renseigné un numéro de référence, la synchronisation email s'en sert en priorité pour repérer les réponses.
+          <p className="text-xs text-content-faint">
+            Astuce : un numéro de référence renseigné sert en priorité à repérer les réponses dans tes emails.
           </p>
 
           <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-ink-muted hover:bg-gray-50 transition"
-            >
+            <button type="button" onClick={onClose}
+              className="flex-1 py-2.5 rounded-lg border border-border text-sm font-medium text-content-muted hover:bg-bg-inset hover:text-content transition-colors">
               Annuler
             </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 py-2.5 rounded-lg bg-navy hover:bg-navy-light text-white text-sm font-medium transition disabled:opacity-50"
-            >
+            <button type="submit" disabled={saving}
+              className="flex-1 py-2.5 rounded-lg bg-accent hover:bg-accent-dark text-bg text-sm font-semibold transition-all hover:shadow-glow active:scale-95 disabled:opacity-50">
               {saving ? "Enregistrement..." : application ? "Enregistrer" : "Ajouter"}
             </button>
           </div>

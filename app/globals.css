@@ -2,23 +2,123 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Thème — "Trading desk" : encre profonde + accent vert électrique
+   Variables pilotant le mode clair / sombre (toggle via classe .dark)
+   ============================================================ */
+
+:root {
+  /* Mode clair */
+  --bg: #FAFAF9;
+  --bg-elevated: #FFFFFF;
+  --bg-inset: #F1F2F0;
+  --border: #E5E5E2;
+  --border-strong: #D4D4D0;
+  --text: #16181D;
+  --text-muted: #5C6068;
+  --text-faint: #9A9EA6;
+  --accent: #0E9F6E;
+  --accent-dark: #0B7A54;
+  --accent-soft: rgba(14, 159, 110, 0.12);
+  --accent-glow: rgba(14, 159, 110, 0.35);
+  --shadow-card: 0 1px 2px rgba(16, 18, 22, 0.04), 0 2px 8px rgba(16, 18, 22, 0.04);
+  --shadow-card-hover: 0 4px 20px rgba(16, 18, 22, 0.10);
+  --grid-line: rgba(16, 18, 22, 0.025);
+}
+
+.dark {
+  /* Mode sombre (par défaut) */
+  --bg: #0A0C10;
+  --bg-elevated: #13161C;
+  --bg-inset: #1A1E26;
+  --border: #232831;
+  --border-strong: #323844;
+  --text: #E8EAED;
+  --text-muted: #9BA1AC;
+  --text-faint: #5F6670;
+  --accent: #1FD68A;
+  --accent-dark: #14B374;
+  --accent-soft: rgba(31, 214, 138, 0.14);
+  --accent-glow: rgba(31, 214, 138, 0.4);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 12px rgba(0, 0, 0, 0.25);
+  --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --grid-line: rgba(255, 255, 255, 0.018);
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  background-color: #F7F8FA;
-  color: #1A1D29;
+  background-color: var(--bg);
+  color: var(--text);
+  /* Grille discrète type écran de cotation */
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  transition: background-color 0.4s ease, color 0.25s ease;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #D1D5DB transparent;
+  scrollbar-color: var(--border-strong) transparent;
 }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-track { background: transparent; }
 
 :focus-visible {
-  outline: 2px solid #FF6B4A;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+/* Skeleton shimmer pour les états de chargement */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-inset);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.06),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Délais d'apparition échelonnés pour les grilles de cartes */
+.stagger > * { animation: fade-in-up 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+.stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger > *:nth-child(3) { animation-delay: 0.10s; }
+.stagger > *:nth-child(4) { animation-delay: 0.14s; }
+.stagger > *:nth-child(5) { animation-delay: 0.18s; }
+.stagger > *:nth-child(6) { animation-delay: 0.22s; }
+.stagger > *:nth-child(7) { animation-delay: 0.26s; }
+.stagger > *:nth-child(8) { animation-delay: 0.30s; }
+.stagger > *:nth-child(n+9) { animation-delay: 0.34s; }
+
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -27,4 +127,5 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  body { background-image: none; }
 }
